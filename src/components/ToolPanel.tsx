@@ -8,10 +8,12 @@ import {
   MdTouchApp,
   MdLineWeight,
 } from "react-icons/md";
+import { ToolType } from "@/types";
 import "@/index.css";
 
 interface ToolboxProps {
   width?: string;
+  onSelectTool: (tool: ToolType) => void;
 }
 
 const iconClassName =
@@ -55,7 +57,7 @@ const icons = [
   },
 ];
 
-const Toolbox: React.FC<ToolboxProps> = ({ width = "80px" }) => {
+const Toolbox: React.FC<ToolboxProps> = ({ width = "80px", onSelectTool }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
@@ -74,26 +76,20 @@ const Toolbox: React.FC<ToolboxProps> = ({ width = "80px" }) => {
   const handleClick = (itemId: string) => {
     if (selectedItem === itemId) {
       setSelectedItem(null);
+      onSelectTool("None");
     } else {
       setSelectedItem(itemId);
+      onSelectTool(itemId as ToolType);
     }
   };
 
   return (
     <div
       id="toolbox"
-      className="bg-gray-800 p-2 z-10 overflow-y-auto text-white relative"
-      style={{
-        width,
-        position: "absolute",
-        left: 0,
-        transform: "translateX(-100%)",
-        top: 0,
-        bottom: 0,
-      }}
+      className="flex-auto bg-gray-800 p-2 z-10 overflow-y-auto text-white relative"
+      style={{ width }}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="w-full text-center text-base mb-2">工具</div>
       {icons.map(({ id, desc, icon }) => (
         <div
           key={id}

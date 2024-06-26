@@ -1,4 +1,6 @@
 import React from "react";
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import "react-tabs/style/react-tabs.css";
 import ToolProperties from "./ToolProperties";
 import LayerManager from "./LayerManager";
 
@@ -7,23 +9,28 @@ interface PropertiesPanelProps {
 }
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
-  width = "120px",
+  width = "200px",
 }) => {
   return (
     <div
       id="properties-panel"
-      className="bg-gray-200 p-4 z-10"
-      style={{ width, position: "absolute", right: 0, top: 0, bottom: 0 }}
+      className="flex-auto bg-gray-800 p-2 z-10"
+      style={{ width }}
     >
-      <h3>Properties Panel</h3>
-      <div className="border-b border-gray-300">
-        <h4>Tool Properties</h4>
-        <ToolProperties />
-      </div>
-      <div>
-        <h4>Layer Manager</h4>
-        <LayerManager />
-      </div>
+      <Tabs>
+        <TabList>
+          <Tab>属性</Tab>
+          <Tab>图层</Tab>
+        </TabList>
+        <TabPanel>
+          <h4 className="border-b border-gray-300 mb-2">Tool Properties</h4>
+          <ToolProperties />
+        </TabPanel>
+        <TabPanel>
+          <h4 className="border-b border-gray-300 mb-2">Layer Manager</h4>
+          <LayerManager />
+        </TabPanel>
+      </Tabs>
     </div>
   );
 };

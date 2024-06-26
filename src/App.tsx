@@ -13,10 +13,10 @@ const App: React.FC = () => {
       }}
     >
       <DesignTool
-        toolboxWidth="60px"
+        toolPanelWidth="60px"
         width="800px"
         height="600px"
-        propertiesPanelWidth="120px"
+        propertiesPanelWidth="200px"
       />
     </div>
   );

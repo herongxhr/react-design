@@ -1,28 +1,64 @@
 import React from "react";
-import Toolbox from "./Toolbox";
-import PropertiesPanel from "./PropertiesPanel";
+import { useDrop } from "react-dnd";
+import { ToolType, Component } from "@/types";
+import DraggableComponent from "./DraggableComponent";
 
 interface CanvasProps {
   width: string;
   height: string;
-  toolboxWidth: string;
-  propertiesPanelWidth: string;
+  selectedToolType: ToolType;
+  components: Component[];
+  onAddComponent: (component: Component) => void;
+  onUpdateComponent: (id: string, updates: Partial<Component>) => void;
 }
 
 const Canvas: React.FC<CanvasProps> = ({
   width,
   height,
-  toolboxWidth,
-  propertiesPanelWidth,
+  selectedToolType,
+  components,
+  onAddComponent,
+  onUpdateComponent,
 }) => {
+  const [, drop] = useDrop(() => ({
+    accept: "COMPONENT",
+    drop: (item, monitor) => {
+      const delta = monitor.getDifferenceFromInitialOffset();
+      const left = Math.round(item.left + delta.x);
+      const top = Math.round(item.top + delta.y);
+      onUpdateComponent(item.id, { left, top });
+      return undefined;
+    },
+  }));
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (selectedToolType !== "None") {
+      const newComponent: Component = {
+        id: `${Date.now()}`,
+        type: selectedToolType,
+        left: e.nativeEvent.offsetX,
+        top: e.nativeEvent.offsetY,
+        width: 100,
+        height: 100,
+        content: <div>{selectedToolType}</div>,
+      };
+      onAddComponent(newComponent);
+    }
+  };
+
   return (
     <div
-      className="relative bg-white"
-      style={{ width, height, margin: "0 auto" }}
+      ref={drop}
+      style={{ width, height, position: "relative", background: "#f0f0f0" }}
+      onClick={handleCanvasClick}
     >
-      <h3>Canvas</h3>
-      <Toolbox width={toolboxWidth} />
-      <PropertiesPanel width={propertiesPanelWidth} />
+      {components.map((component) => (
+        <DraggableComponent
+          key={component.id}
+          component={component}
+          onUpdateComponent={onUpdateComponent}
+        />
+      ))}
     </div>
   );
 };
