@@ -1,32 +1,34 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 
 export default defineConfig(({ command }) => {
-  if (command === 'serve') {
-    // 开发环境配置
-    return {
-      plugins: [react()],
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, './src'),
-        },
-        extensions: ['.js', '.jsx', '.ts', '.tsx']
+  const sharedConfig = {
+    plugins: [react()],
+    css: {
+      postcss: {
+        plugins: [tailwindcss, autoprefixer],
       },
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    },
+  };
+  if (command === 'serve') {
+    return {
+      ...sharedConfig,
       server: {
-        open: true, // 自动打开浏览器
+        open: true,
       },
     };
   } else {
-    // 生产环境配置
     return {
-      plugins: [react()],
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, './src'),
-        },
-        extensions: ['.js', '.jsx', '.ts', '.tsx']
-      },
+      ...sharedConfig,
       build: {
         rollupOptions: {
           external: ['react', 'react-dom'],
