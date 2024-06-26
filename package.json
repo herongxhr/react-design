@@ -3,6 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist/my-component-library.umd.js",
+  "module": "dist/my-component-library.es.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist",
+    "src/components",
+    "src/types.ts",
+    "src/index.ts"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

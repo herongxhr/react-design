@@ -49,11 +49,11 @@ const App: React.FC = () => {
 
   return (
     <div style={{ display: "flex" }}>
-      <Canvas
+      {/* <Canvas
         components={components}
         moveComponent={moveComponent}
         updateComponent={updateComponent}
-      />
+      /> */}
       <LayerManager components={components} moveLayer={moveLayer} />
     </div>
   );
