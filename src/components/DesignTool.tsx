@@ -1,16 +1,27 @@
 import React from "react";
-import Toolbox from "./Toolbox";
 import Canvas from "./Canvas";
-import PropertiesPanel from "./PropertiesPanel";
 import "@/index.css";
 
-const DesignTool: React.FC = () => {
+interface DesignToolProps {
+  width: string;
+  height: string;
+  toolboxWidth: string;
+  propertiesPanelWidth: string;
+}
+
+const DesignTool: React.FC<DesignToolProps> = ({
+  width,
+  height,
+  toolboxWidth,
+  propertiesPanelWidth,
+}) => {
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      <Toolbox />
-      <Canvas />
-      <PropertiesPanel />
-    </div>
+    <Canvas
+      width={width}
+      height={height}
+      toolboxWidth={toolboxWidth}
+      propertiesPanelWidth={propertiesPanelWidth}
+    />
   );
 };
 

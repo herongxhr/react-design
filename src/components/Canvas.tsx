@@ -1,10 +1,28 @@
 import React from "react";
+import Toolbox from "./Toolbox";
+import PropertiesPanel from "./PropertiesPanel";
 
-const Canvas: React.FC = () => {
+interface CanvasProps {
+  width: string;
+  height: string;
+  toolboxWidth: string;
+  propertiesPanelWidth: string;
+}
+
+const Canvas: React.FC<CanvasProps> = ({
+  width,
+  height,
+  toolboxWidth,
+  propertiesPanelWidth,
+}) => {
   return (
-    <div style={{ flex: 1, borderRight: "1px solid #ccc", padding: "10px" }}>
+    <div
+      className="relative bg-white"
+      style={{ width, height, margin: "0 auto" }}
+    >
       <h3>Canvas</h3>
-      {/* Canvas implementation goes here */}
+      <Toolbox width={toolboxWidth} />
+      <PropertiesPanel width={propertiesPanelWidth} />
     </div>
   );
 };
