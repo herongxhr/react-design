@@ -1,18 +1,20 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import Canvas from "@/components/Canvas";
-import Toolbox from "@/components/ToolPanel";
+import ToolPanel from "@/components/ToolPanel";
 import PropertiesPanel from "@/components/PropertiesPanel";
 import { ToolType, Component } from "@/types";
 import "@/index.css";
 
 interface DesignToolProps {
-  width: string;
-  height: string;
-  toolPanelWidth: string;
-  propertiesPanelWidth: string;
+  width: number;
+  height: number;
+  toolPanelWidth: number;
+  propertiesPanelWidth: number;
 }
+
+const SNAP_DISTANCE = 30;
 
 const DesignTool: React.FC<DesignToolProps> = ({
   width,
@@ -22,26 +24,44 @@ const DesignTool: React.FC<DesignToolProps> = ({
 }) => {
   const [selectedToolType, setSelectedToolType] = useState<ToolType>("None");
   const [components, setComponents] = useState<Component[]>([]);
-  const [toolboxPosition, setToolboxPosition] = useState({
-    x: 0,
+
+  const [toolPanelPosition, setToolPanelPosition] = useState({
+    x: -toolPanelWidth,
     y: 0,
-    locked: true,
   });
   const [propertiesPanelPosition, setPropertiesPanelPosition] = useState({
-    x: 0,
+    x: window.innerWidth,
     y: 0,
-    locked: true,
   });
 
   const initialMousePosition = useRef({ x: 0, y: 0 });
-  const initialToolboxPosition = useRef({ x: 0, y: 0 });
-  const initialPropertiesPanelPosition = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
+  const mouseMoveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const mouseUpHandlerRef = useRef<(() => void) | null>(null);
 
-  const handleSelectTool = useCallback(() => {
-    (toolType: ToolType) => {
-      setSelectedToolType(toolType);
+  useEffect(() => {
+    const updatePanelPositions = () => {
+      const canvasRect = canvasRef.current!.getBoundingClientRect();
+      setToolPanelPosition({
+        x: canvasRect.left - toolPanelWidth,
+        y: canvasRect.top,
+      });
+      setPropertiesPanelPosition({
+        x: canvasRect.right,
+        y: canvasRect.top,
+      });
     };
+
+    updatePanelPositions();
+    window.addEventListener("resize", updatePanelPositions);
+
+    return () => {
+      window.removeEventListener("resize", updatePanelPositions);
+    };
+  }, [canvasRef, toolPanelWidth, propertiesPanelWidth]);
+
+  const handleSelectTool = useCallback((toolType: ToolType) => {
+    setSelectedToolType(toolType);
   }, []);
 
   const handleAddComponent = useCallback((component: Component) => {
@@ -59,98 +79,106 @@ const DesignTool: React.FC<DesignToolProps> = ({
     []
   );
 
-  const convertToWindowPosition = (
-    canvasRect: DOMRect,
-    position: { x: number; y: number }
-  ) => {
-    return {
-      x: canvasRect.left + position.x,
-      y: canvasRect.top + position.y,
-    };
-  };
-  const handleToolboxDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
     initialMousePosition.current = { x: e.clientX, y: e.clientY };
-    initialToolboxPosition.current = {
-      x: toolboxPosition.x,
-      y: toolboxPosition.y,
-    };
-    const canvasRect = canvasRef.current!.getBoundingClientRect();
-    const windowPosition = convertToWindowPosition(
-      canvasRect,
-      initialToolboxPosition.current
-    );
-    setToolboxPosition({ ...windowPosition, locked: false });
   };
 
-  const handleToolboxDrag = (e: MouseEvent) => {
+  const handleDrag = (
+    e: MouseEvent,
+    position: { x: number; y: number },
+    setPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>
+  ) => {
     const deltaX = e.clientX - initialMousePosition.current.x;
     const deltaY = e.clientY - initialMousePosition.current.y;
-    setToolboxPosition({
-      x: initialToolboxPosition.current.x + deltaX,
-      y: initialToolboxPosition.current.y + deltaY,
-      locked: false,
-    });
+    setPosition((prev) => ({
+      ...prev,
+      x: position.x + deltaX,
+      y: position.y + deltaY,
+    }));
   };
 
-  const handlePropertiesPanelDragStart = (
-    e: React.MouseEvent<HTMLDivElement>
+  const handleToolPanelDrag = (
+    e: MouseEvent,
+    position: { x: number; y: number },
+    setPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>
   ) => {
-    initialMousePosition.current = { x: e.clientX, y: e.clientY };
-    initialPropertiesPanelPosition.current = {
-      x: propertiesPanelPosition.x,
-      y: propertiesPanelPosition.y,
-    };
-    const canvasRect = canvasRef.current!.getBoundingClientRect();
-    const windowPosition = convertToWindowPosition(
-      canvasRect,
-      initialPropertiesPanelPosition.current
-    );
-    setPropertiesPanelPosition({ ...windowPosition, locked: false });
+    handleDrag(e, position, setPosition);
   };
 
-  const handlePropertiesPanelDrag = (e: MouseEvent) => {
-    const deltaX = e.clientX - initialMousePosition.current.x;
-    const deltaY = e.clientY - initialMousePosition.current.y;
-    setPropertiesPanelPosition({
-      x: initialPropertiesPanelPosition.current.x + deltaX,
-      y: initialPropertiesPanelPosition.current.y + deltaY,
-      locked: false,
-    });
+  const handlePropertiesPanelDrag = (
+    e: MouseEvent,
+    position: { x: number; y: number },
+    setPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>
+  ) => {
+    handleDrag(e, position, setPosition);
   };
 
   const handleMouseUp = () => {
-    setToolboxPosition((prev) => ({ ...prev, locked: true }));
-    setPropertiesPanelPosition((prev) => ({ ...prev, locked: true }));
-    window.removeEventListener("mousemove", handleToolboxDrag);
-    window.removeEventListener("mousemove", handlePropertiesPanelDrag);
-    window.removeEventListener("mouseup", handleMouseUp);
+    const canvasRect = canvasRef.current!.getBoundingClientRect();
+    setToolPanelPosition((prev) => {
+      if (
+        Math.abs(prev.x - canvasRect.left) < SNAP_DISTANCE + toolPanelWidth &&
+        Math.abs(prev.y - canvasRect.top) < SNAP_DISTANCE
+      ) {
+        return {
+          ...prev,
+          x: canvasRect.left - toolPanelWidth,
+          y: canvasRect.top,
+        };
+      } else {
+        return prev;
+      }
+    });
+    setPropertiesPanelPosition((prev) => {
+      if (
+        Math.abs(prev.x - canvasRect.right) < SNAP_DISTANCE &&
+        Math.abs(prev.y - canvasRect.top) < SNAP_DISTANCE
+      ) {
+        return {
+          ...prev,
+          x: canvasRect.right,
+          y: canvasRect.top,
+        };
+      } else {
+        return prev;
+      }
+    });
+    window.removeEventListener("mousemove", mouseMoveHandlerRef.current!);
+    window.removeEventListener("mouseup", mouseUpHandlerRef.current!);
+    initialMousePosition.current = { x: 0, y: 0 };
   };
 
-  const handleMouseDown =
-    (
-      dragStartHandler: (e: React.MouseEvent<HTMLDivElement>) => void,
-      dragHandler: (e: MouseEvent) => void
-    ) =>
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      dragStartHandler(e);
-      window.addEventListener("mousemove", dragHandler);
-      window.addEventListener("mouseup", handleMouseUp);
-    };
+  const handleMouseDown = (
+    e: React.MouseEvent<HTMLDivElement>,
+    position: { x: number; y: number },
+    dragStartHandler: (
+      e: React.MouseEvent<HTMLDivElement>,
+      setPosition: React.Dispatch<
+        React.SetStateAction<{ x: number; y: number }>
+      >
+    ) => void,
+    setPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>,
+    dragHandler: (
+      e: MouseEvent,
+      position: { x: number; y: number },
+      setPosition: React.Dispatch<
+        React.SetStateAction<{ x: number; y: number }>
+      >
+    ) => void
+  ) => {
+    dragStartHandler(e, setPosition);
+    mouseMoveHandlerRef.current = (event) =>
+      dragHandler(event, position, setPosition);
+    mouseUpHandlerRef.current = handleMouseUp;
+    window.addEventListener("mousemove", mouseMoveHandlerRef.current);
+    window.addEventListener("mouseup", mouseUpHandlerRef.current);
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="relative" style={{ width, height }}>
-        <div
-          ref={canvasRef}
-          className="relative"
-          style={{
-            width,
-            height,
-          }}
-        >
+      <div style={{ width: width + "px", height: height + "px" }}>
+        <div ref={canvasRef} className="w-full h-full">
           <Canvas
-            width={width}
-            height={height}
             components={components}
             selectedToolType={selectedToolType}
             onAddComponent={handleAddComponent}
@@ -158,50 +186,56 @@ const DesignTool: React.FC<DesignToolProps> = ({
           />
         </div>
         <div
-          className="absolute flex flex-col"
+          className="flex flex-col"
           style={{
-            width: toolPanelWidth,
-            height: height,
-            top: toolboxPosition.y,
-            left: toolboxPosition.locked
-              ? -parseInt(toolPanelWidth)
-              : toolboxPosition.x,
-            position: toolboxPosition.locked ? "absolute" : "fixed",
+            width: toolPanelWidth + "px",
+            position: "fixed",
+            height: height + "px",
+            top: toolPanelPosition.y,
+            left: toolPanelPosition.x,
           }}
         >
           <div
-            className="drag-handle w-full bg-gray-800 text-white text-sm p-2 cursor-move"
-            onMouseDown={handleMouseDown(
-              handleToolboxDragStart,
-              handleToolboxDrag
-            )}
+            className="drag-handle bg-gray-800 text-white p-2 cursor-move"
+            onMouseDown={(e) =>
+              handleMouseDown(
+                e,
+                toolPanelPosition,
+                handleDragStart,
+                setToolPanelPosition,
+                handleToolPanelDrag
+              )
+            }
           >
-            <div className="w-full text-center"> 工具</div>
+            <div className="w-full text-center">工具</div>
           </div>
-          <Toolbox onSelectTool={handleSelectTool} width={toolPanelWidth} />
+          <ToolPanel onSelectTool={handleSelectTool} />
         </div>
         <div
-          className="absolute flex flex-col"
+          className="flex flex-col"
           style={{
-            width: propertiesPanelWidth,
-            height: height,
+            position: "fixed",
+            width: propertiesPanelWidth + "px",
+            height: height + "px",
             top: propertiesPanelPosition.y,
-            right: propertiesPanelPosition.locked
-              ? -parseInt(propertiesPanelWidth)
-              : propertiesPanelPosition.x,
-            position: propertiesPanelPosition.locked ? "absolute" : "fixed",
+            left: propertiesPanelPosition.x,
           }}
         >
           <div
-            className="drag-handle bg-gray-800 w-full text-sm text-white p-2 cursor-move"
-            onMouseDown={handleMouseDown(
-              handlePropertiesPanelDragStart,
-              handlePropertiesPanelDrag
-            )}
+            className="drag-handle bg-gray-800 text-white p-2 cursor-move"
+            onMouseDown={(e) =>
+              handleMouseDown(
+                e,
+                propertiesPanelPosition,
+                handleDragStart,
+                setPropertiesPanelPosition,
+                handlePropertiesPanelDrag
+              )
+            }
           >
             <div className="w-full text-center">调整区</div>
           </div>
-          <PropertiesPanel width={propertiesPanelWidth} />
+          <PropertiesPanel />
         </div>
       </div>
     </DndProvider>

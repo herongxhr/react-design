@@ -12,7 +12,6 @@ import { ToolType } from "@/types";
 import "@/index.css";
 
 interface ToolboxProps {
-  width?: string;
   onSelectTool: (tool: ToolType) => void;
 }
 
@@ -57,7 +56,7 @@ const icons = [
   },
 ];
 
-const Toolbox: React.FC<ToolboxProps> = ({ width = "80px", onSelectTool }) => {
+const Toolbox: React.FC<ToolboxProps> = ({ onSelectTool }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
@@ -86,8 +85,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ width = "80px", onSelectTool }) => {
   return (
     <div
       id="toolbox"
-      className="flex-auto bg-gray-800 p-2 z-10 overflow-y-auto text-white relative"
-      style={{ width }}
+      className="w-full h-full flex-auto bg-gray-800 p-2 z-10 overflow-y-auto text-white relative"
       onMouseLeave={handleMouseLeave}
     >
       {icons.map(({ id, desc, icon }) => (

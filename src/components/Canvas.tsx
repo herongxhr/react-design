@@ -4,8 +4,6 @@ import { ToolType, Component } from "@/types";
 import DraggableComponent from "./DraggableComponent";
 
 interface CanvasProps {
-  width: string;
-  height: string;
   selectedToolType: ToolType;
   components: Component[];
   onAddComponent: (component: Component) => void;
@@ -13,8 +11,6 @@ interface CanvasProps {
 }
 
 const Canvas: React.FC<CanvasProps> = ({
-  width,
-  height,
   selectedToolType,
   components,
   onAddComponent,
@@ -49,7 +45,7 @@ const Canvas: React.FC<CanvasProps> = ({
   return (
     <div
       ref={drop}
-      style={{ width, height, position: "relative", background: "#f0f0f0" }}
+      className="w-full h-full bg-[#f0f0f0]"
       onClick={handleCanvasClick}
     >
       {components.map((component) => (

@@ -5,17 +5,14 @@ import ToolProperties from "./ToolProperties";
 import LayerManager from "./LayerManager";
 
 interface PropertiesPanelProps {
-  width?: string;
+  width?: number;
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
-  width = "200px",
-}) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = () => {
   return (
     <div
       id="properties-panel"
-      className="flex-auto bg-gray-800 p-2 z-10"
-      style={{ width }}
+      className="w-full h-full flex-auto bg-gray-800 p-2 z-10"
     >
       <Tabs>
         <TabList>
